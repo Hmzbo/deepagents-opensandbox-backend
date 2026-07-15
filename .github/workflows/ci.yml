@@ -80,8 +80,9 @@ jobs:
             fi
             sleep 1
           done
-
-      - run: uv pip install --system -e ".[test]"
+      
+      - run: uv venv
+      - run: uv pip install -e ".[test]"
       - run: uv run pytest tests/integration_tests/test_sandbox.py -v
 
       - name: Show server log
