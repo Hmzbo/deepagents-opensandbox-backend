@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      run_integration:
+        description: "Also run the live-Docker integration suite (slow, needs a real sandbox)"
+        type: boolean
+        default: false
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv run --with ruff ruff check .
+      - run: uv run --with ruff ruff format --check .
+
+  smoke:
+    # Fast, Docker-free check: the package builds, installs cleanly, and
+    # imports without errors. Does NOT touch a real sandbox - see the
+    # `integration` job below for that.
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv build
+      - run: uv venv /tmp/smoke-env
+      - run: /tmp/smoke-env/bin/pip install dist/*.whl
+      - run: /tmp/smoke-env/bin/python -c "from deepagents_opensandbox_backend import OpenSandboxBackend, InsecureSandboxWarning"
+
+  integration:
+    # Exercises a REAL sandbox end-to-end (execute/ls/read/write/edit/glob/grep)
+    # against a live opensandbox-server + Docker.
+    #
+    # This is deliberately NOT run on every push/PR.
+    #
+    # Trigger manually: Actions tab -> CI -> Run workflow -> check
+    # "run_integration".
+    if: github.event_name == 'workflow_dispatch' && inputs.run_integration
+    runs-on: ubuntu-latest
+    needs: smoke
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+
+      - run: docker pull opensandbox/code-interpreter:v1.1.0
+
+      - name: Configure and start opensandbox-server
+        run: |
+          uv tool install opensandbox-server
+          opensandbox-server init-config ~/.sandbox.toml --example docker
+          # CI runners are single-use, isolated VMs with nothing else running
+          # on them - the "no api_key" risk described in the README's
+          # Security section (other local processes / browser tabs reaching
+          # the API) doesn't apply here the way it does on a real dev
+          # machine. Leaving it unauthenticated here matches the test
+          # fixture's own `OpenSandboxBackend.create()` call, which also
+          # passes no key, so nothing else needs to change to run this in CI.
+          yes YES | opensandbox-server > opensandbox-server.log 2>&1 &
+          sleep 5
+
+      - run: uv pip install --system -e ".[test]"
+      - run: uv run pytest tests/integration_tests/test_sandbox.py -v
+
+      - name: Show server log
+        if: always()
+        run: cat opensandbox-server.log || true

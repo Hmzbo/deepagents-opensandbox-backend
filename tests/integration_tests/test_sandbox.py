@@ -12,7 +12,7 @@ import pytest
 from deepagents.backends.protocol import SandboxBackendProtocol
 from langchain_tests.integration_tests import SandboxIntegrationTests
 
-from deepagents_opensandbox import OpenSandboxBackend
+from deepagents_opensandbox_backend import OpenSandboxBackend
 
 
 class TestOpenSandboxStandard(SandboxIntegrationTests):

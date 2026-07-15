@@ -26,11 +26,11 @@ from opensandbox.config import ConnectionConfig
 from opensandbox.models import WriteEntry
 from opensandbox.models.execd import RunCommandOpts
 
-from deepagents_opensandbox._loop import get_loop
+from deepagents_opensandbox_backend._loop import get_loop
 
 DEFAULT_IMAGE = "opensandbox/code-interpreter:v1.1.0"
-# If you change DEFAULT_IMAGE, check OpenSandbox's README for that tag's path —
-# a mismatch here makes the sandbox container exit immediately (exit code
+# If you change DEFAULT_IMAGE, check OpenSandbox's README for that tag's path.
+# A mismatch here makes the sandbox container exit immediately (exit code
 # 127, "command not found") and every health check will simply time out,
 # which looks like a networking problem but isn't one.
 
@@ -237,23 +237,9 @@ def _run_opts(timeout: int | None) -> RunCommandOpts | None:
 
 
 def _to_execute_response(execution) -> ExecuteResponse:  # noqa: ANN001
-    # OpenSandbox streams stdout/stderr one line per chunk, with the
-    # trailing newline already stripped from each chunk's `.text`. Joining
-    # with "" (as an earlier version of this function did) silently
-    # destroys every line boundary, which breaks any caller that parses
-    # output line-by-line - notably deepagents' `ls`/`glob`/`grep`, which
-    # JSON-decode one line at a time and silently swallow a decode error
-    # into an empty result rather than raising. Joining with "\n" instead
-    # restores the original line structure.
     stdout = "\n".join(chunk.text for chunk in execution.logs.stdout)
     stderr = "\n".join(chunk.text for chunk in execution.logs.stderr)
     combined = "\n".join(part for part in (stdout, stderr) if part)
-    # NOTE: previously fell back to the literal string "(no output)" here.
-    # deepagents' own parsers (_parse_grep_output, etc.) check `if not output`
-    # to detect "nothing happened" - a non-empty placeholder string defeats
-    # that check and gets misreported as literal command output/error detail
-    # (confirmed via test_grep_no_matches). A genuinely empty string lets
-    # each caller's own "no output" handling work as designed.
     return ExecuteResponse(
         output=combined,
         exit_code=getattr(execution, "exit_code", 0),
