@@ -1,4 +1,4 @@
-# deepagents-opensandbox
+# deepagents-opensandbox-Backend
 
 A [Deep Agents](https://docs.langchain.com/oss/python/deepagents/overview) sandbox
 backend for [OpenSandbox](https://github.com/alibaba/OpenSandbox), running entirely
@@ -6,7 +6,7 @@ locally via Docker — no cloud sandbox provider, API key, or per-minute billing
 
 ## Description
 
-`deepagents-opensandbox` implements deep agents' `BaseSandbox` interface on top of a
+`deepagents-opensandbox-backend` implements deep agents' `BaseSandbox` interface on top of a
 locally-run OpenSandbox server. It gives an agent a real, isolated Docker sandbox to
 execute code, read/write files, and search the filesystem — the same capability as
 deep agents' cloud-hosted sandbox providers (Daytona, Modal, Runloop), but running
@@ -29,7 +29,7 @@ entirely on your own machine.
 ```bash
 uv venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
-uv pip install deepagents-opensandbox
+uv pip install deepagents-opensandbox-backend
 ```
 
 ## One-time local setup
@@ -92,7 +92,7 @@ that way.
 
 ```python
 from deepagents import create_deep_agent
-from deepagents_opensandbox import OpenSandboxBackend
+from deepagents_opensandbox_backend import OpenSandboxBackend
 
 backend = OpenSandboxBackend.create(api_key="some-long-random-string-you-generate")
 agent = create_deep_agent(

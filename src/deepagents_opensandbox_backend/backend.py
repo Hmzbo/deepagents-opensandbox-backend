@@ -108,7 +108,9 @@ class OpenSandboxBackend(BaseSandbox):
                 stacklevel=2,
             )
 
-        config = ConnectionConfig(domain=domain, api_key=api_key, use_server_proxy=use_server_proxy)
+        config = ConnectionConfig(
+            domain=domain, api_key=api_key, use_server_proxy=use_server_proxy
+        )
         sandbox = loop.run(
             Sandbox.create(
                 image,
@@ -135,7 +137,11 @@ class OpenSandboxBackend(BaseSandbox):
         return _to_execute_response(execution)
 
     def upload_files(self, files: list[tuple[str, bytes]]) -> list[FileUploadResponse]:
-        invalid = [FileUploadResponse(path=p, error="invalid_path") for p, _ in files if not p.startswith("/")]
+        invalid = [
+            FileUploadResponse(path=p, error="invalid_path")
+            for p, _ in files
+            if not p.startswith("/")
+        ]
         if invalid:
             # deepagents' contract treats invalid_path as a caller mistake an
             # LLM can retry/fix - reject client-side before any network call
@@ -164,7 +170,11 @@ class OpenSandboxBackend(BaseSandbox):
                 content = self._loop.run(self._sandbox.files.read_bytes(path))
                 results.append(FileDownloadResponse(path=path, content=content))
             except Exception as exc:  # noqa: BLE001 - partial success required
-                results.append(FileDownloadResponse(path=path, error=self._classify_download_error(path, exc)))
+                results.append(
+                    FileDownloadResponse(
+                        path=path, error=self._classify_download_error(path, exc)
+                    )
+                )
         return results
 
     def _classify_download_error(self, path: str, exc: Exception) -> str:

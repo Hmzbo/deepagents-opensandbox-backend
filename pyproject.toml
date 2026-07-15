@@ -7,7 +7,7 @@ name = "deepagents-opensandbox-backend"
 version = "0.1.0"
 description = "Deep Agents sandbox backend for a locally-run OpenSandbox server"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [{ name = "Hmzbo" }]
 keywords = ["deepagents", "langchain", "langgraph", "opensandbox", "sandbox", "agents"]
