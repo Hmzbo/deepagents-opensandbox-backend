@@ -16,8 +16,10 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v8
+        with:
+          python-version: "3.12"
       - run: uv run --with ruff ruff check .
       - run: uv run --with ruff ruff format --check .
 
@@ -28,11 +30,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: lint
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v8
+        with:
+          python-version: "3.12"
       - run: uv build
       - run: uv venv /tmp/smoke-env
-      - run: /tmp/smoke-env/bin/pip install dist/*.whl
+      - run: uv pip install --python /tmp/smoke-env/bin/python install dist/*.whl
       - run: /tmp/smoke-env/bin/python -c "from deepagents_opensandbox_backend import OpenSandboxBackend, InsecureSandboxWarning"
 
   integration:
@@ -47,8 +51,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: smoke
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v8
+        with:
+          python-version: "3.12"
 
       - run: docker pull opensandbox/code-interpreter:v1.1.0
 
@@ -63,10 +69,19 @@ jobs:
           # machine. Leaving it unauthenticated here matches the test
           # fixture's own `OpenSandboxBackend.create()` call, which also
           # passes no key, so nothing else needs to change to run this in CI.
-          yes YES | opensandbox-server > opensandbox-server.log 2>&1 &
-          sleep 5
 
-      - run: uv pip install --system -e ".[test]"
+          yes YES | opensandbox-server > opensandbox-server.log 2>&1 &
+
+          # Wait for the server to be ready (adjust URL/port as needed)
+          for i in {1..15}; do
+            if curl -s http://127.0.0.1:8080/health > /dev/null; then
+              echo "Server is ready!"
+              break
+            fi
+            sleep 1
+          done
+
+      - run: uv pip install -e ".[test]"
       - run: uv run pytest tests/integration_tests/test_sandbox.py -v
 
       - name: Show server log
