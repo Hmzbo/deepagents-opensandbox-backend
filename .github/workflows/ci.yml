@@ -70,7 +70,7 @@ jobs:
           # fixture's own `OpenSandboxBackend.create()` call, which also
           # passes no key, so nothing else needs to change to run this in CI.
 
-          yes YES | opensandbox-server > opensandbox-server.log 2>&1 &
+          OPENSANDBOX_INSECURE_SERVER=YES opensandbox-server > opensandbox-server.log 2>&1 &
 
           # Wait for the server to be ready (adjust URL/port as needed)
           for i in {1..15}; do
