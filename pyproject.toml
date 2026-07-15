@@ -28,7 +28,7 @@ Homepage = "https://github.com/Hmzbo/deepagents-opensandbox-backend"
 Repository = "https://github.com/Hmzbo/deepagents-opensandbox-backend"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/deepagents_opensandbox"]
+packages = ["src/deepagents_opensandbox_backend"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
