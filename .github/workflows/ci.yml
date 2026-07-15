@@ -36,7 +36,7 @@ jobs:
           python-version: "3.12"
       - run: uv build
       - run: uv venv /tmp/smoke-env
-      - run: uv pip install --python /tmp/smoke-env/bin/python install dist/*.whl
+      - run: uv pip install --python /tmp/smoke-env/bin/python dist/*.whl
       - run: /tmp/smoke-env/bin/python -c "from deepagents_opensandbox_backend import OpenSandboxBackend, InsecureSandboxWarning"
 
   integration:
